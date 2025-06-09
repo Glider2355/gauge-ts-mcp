@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+  # メインのGauge MCP Server
+  gauge-mcp-server:
+    build: .
+    container_name: gauge-mcp-server
+    environment:
+      - NODE_ENV=production
+    volumes:
+      # Gaugeプロジェクトをマウント（必要に応じて）
+      - ./projects:/app/projects
+      # stdioでMCPサーバーとして動作するため、TTYを有効にする
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  # MCP Inspector（開発・テスト用）
+  mcp-inspector:
+    build: .
+    container_name: mcp-inspector
+    ports:
+      - "6274:6274"
+      - "6277:6277"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./projects:/app/projects
+    command: >
+      sh -c "
+        npm install -g @modelcontextprotocol/inspector &&
+        npx @modelcontextprotocol/inspector node build/index.js
+      "
+    depends_on:
+      - gauge-mcp-server
+    profiles:
+      - inspector
+      - dev
+
+  # テスト環境（すべてのツールの動作確認用）
+  gauge-test-env:
+    build: .
+    container_name: gauge-test-env
+    environment:
+      - NODE_ENV=test
+    volumes:
+      - ./projects:/app/projects
+      - ./examples:/app/examples
+    working_dir: /app
+    command: >
+      sh -c "
+        echo '🧪 Gauge MCP Server テスト環境';
+        echo '📋 利用可能なツール:';
+        echo '  1. create_from_template - テンプレートからファイル作成';
+        echo '  2. get_implemented_steps - 実装済みステップ取得';
+        echo '  3. run_gauge - Gaugeコマンド実行';
+        echo '';
+        echo '💡 使用例:';
+        echo 'docker-compose exec gauge-test-env gauge version';
+        echo 'docker-compose exec gauge-test-env ls -la /app/projects';
+        echo '';
+        echo 'Press Ctrl+C to exit...';
+        sleep infinity
+      "
+    profiles:
+      - test
+      - dev

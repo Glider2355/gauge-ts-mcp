@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "gauge-ts": {
+      "command": "node",
+      "args": ["path/to/gauge-ts-mcp/build/index.js"],
+      "env": {
+        "DEBUG": "false"
+      }
+    }
+  }
+}
