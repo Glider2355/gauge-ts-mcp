@@ -14,7 +14,14 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "inspector": "npx @modelcontextprotocol/inspector node build/index.js"
+    "inspector": "npx @modelcontextprotocol/inspector node build/index.js",
+    "setup": "npm install && npm run build",
+    "global:install": "npm run build && npm install -g .",
+    "global:uninstall": "npm uninstall -g gauge-mcp-server",
+    "stop": "pkill -f 'gauge-mcp-server\\|@modelcontextprotocol/inspector.*build/index.js' || true",
+    "stop:inspector": "pkill -f '@modelcontextprotocol/inspector.*build/index.js' || true",
+    "stop:server": "pkill -f 'node.*build/index.js' || true",
+    "ps": "ps aux | grep -E 'gauge-mcp-server|@modelcontextprotocol/inspector.*build/index.js|node.*build/index.js' | grep -v grep || echo 'No processes found'"
   },
   "keywords": ["gauge", "mcp", "testing", "automation"],
   "author": "Your Name",

@@ -10,101 +10,242 @@
 2. **get_implemented_steps** - 実装済みのステップを取得
 3. **run_gauge** - Gaugeコマンドを実行
 
-## 🚀 ワンコマンド環境構築
+## 🚀 セットアップ
+
+### 前提条件
+
+- Node.js 18以上
+- npm または yarn
+
+### 方法1: npx実行（最もシンプル）
+
+```bash
+# 1. リポジトリクローン
+git clone <repository-url>
+cd gauge-ts-mcp
+
+# 2. ビルド
+npm run build
+
+# 3. 別プロジェクトからnpxで実行
+cd ../my-other-project
+npx /path/to/gauge-ts-mcp/build/index.js
+```
+
+### 方法2: グローバルインストール
+
+別プロジェクトからも使用したい場合：
+
+```bash
+# 1. リポジトリクローン
+git clone <repository-url>
+cd gauge-ts-mcp
+
+# 2. グローバルインストール
+npm run global:install
+
+# 3. どこからでも使用可能
+cd ../my-other-project
+gauge-mcp-server  # どこからでも実行可能
+```
+
+### 方法2: ローカルインストール
+
+このリポジトリ内でのみ使用する場合：
+
+```bash
+# 1. リポジトリクローン
+git clone <repository-url>
+cd gauge-ts-mcp
+
+# 2. ローカルセットアップ
+npm run setup
+
+# 3. 動作確認
+npm run inspector
+```
+
+## 📋 使用方法
 
 ### 基本的な使用方法
 
 ```bash
-# 1. リポジトリをクローン
-git clone <repository-url>
-cd gauge-ts-mcp
+# MCPサーバー起動
+npm start
 
-# 2. ワンコマンドでビルド→起動
-docker-compose up --build -d
-
-# または
-make setup
+# MCP Inspector で動作確認（別ターミナル）
+npm run inspector
 ```
 
-### 使用可能なコマンド
-
-#### 🔥 **推奨: Makeを使った簡単操作**
+### 開発
 
 ```bash
-# ヘルプを表示
-make help
+# TypeScript ウォッチモード
+npm run dev
 
-# ワンコマンドセットアップ
-make setup
+# テスト実行
+npm test
 
-# 基本操作
-make build      # ビルド
-make up         # 起動
-make down       # 停止
-make restart    # 再起動
-make logs       # ログ表示
+# テスト実行（一回のみ）
+npm run test:run
 
-# 開発・テスト
-make inspector  # MCP Inspector起動
-make test       # テスト環境起動
-make dev        # 開発環境起動
-
-# クリーンアップ
-make clean      # 全削除
+# カバレッジ付きテスト
+npm run test:coverage
 ```
 
-#### 🐳 **直接Docker Composeを使用**
+### プロセス管理
 
 ```bash
-# 基本操作
-docker-compose build                    # ビルド
-docker-compose up -d                    # 起動
-docker-compose down                     # 停止
-docker-compose logs -f gauge-mcp-server # ログ表示
+# 動作中のプロセス確認
+npm run ps
 
-# MCP Inspector起動（開発・テスト用）
-docker-compose --profile inspector up -d
+# 全停止（MCPサーバー + Inspector）
+npm run stop
 
-# テスト環境起動
-docker-compose --profile test up -d
+# Inspector のみ停止
+npm run stop:inspector
 
-# 開発環境起動（Inspector + Test）
-docker-compose --profile dev up -d
-
-# 全削除
-docker-compose down --rmi all --volumes --remove-orphans
+# MCPサーバーのみ停止
+npm run stop:server
 ```
 
-## 環境モード
+## 🛠️ Cline（VS Code拡張）での設定
 
-| モード | コマンド | 説明 |
-|--------|----------|------|
-| **本番** | `docker-compose up -d` | 基本のMCPサーバーのみ |
-| **Inspector** | `docker-compose --profile inspector up -d` | MCP Inspector付き（ポート6274） |
-| **テスト** | `docker-compose --profile test up -d` | テスト環境付き |
-| **開発** | `docker-compose --profile dev up -d` | Inspector + テスト環境 |
+Cline VS Code拡張機能でこのMCPサーバーを使用する方法：
 
-## クイックスタート例
+### 方法1: npx実行（推奨）
+
+最もシンプルで、インストール不要：
+
+```json
+{
+  "cline.mcpServers": {
+    "gauge-mcp-server": {
+      "command": "npx",
+      "args": ["/absolute/path/to/gauge-ts-mcp/build/index.js"]
+    }
+  }
+}
+```
+
+### 方法2: グローバルインストール後の設定
+
+グローバルインストール後は、どのプロジェクトからでも使用可能：
+
+```json
+{
+  "cline.mcpServers": {
+    "gauge-mcp-server": {
+      "command": "gauge-mcp-server"
+    }
+  }
+}
+```
+
+### 方法2: 絶対パス指定
+
+グローバルインストールしない場合：
+
+```json
+{
+  "cline.mcpServers": {
+    "gauge-mcp-server": {
+      "command": "node",
+      "args": ["build/index.js"],
+      "cwd": "/absolute/path/to/gauge-ts-mcp"
+    }
+  }
+}
+```
+
+### 方法3: npm script を使用
+
+```json
+{
+  "cline.mcpServers": {
+    "gauge-mcp-server": {
+      "command": "npm",
+      "args": ["start"],
+      "cwd": "/absolute/path/to/gauge-ts-mcp"
+    }
+  }
+}
+```
+
+### 使用方法
+
+1. VS CodeでCline拡張機能を開く
+2. チャットで以下のようなリクエストを送信：
+   - "basic-webテンプレートで新しいプロジェクトを作成して"
+   - "実装済みのステップを一覧表示して"
+   - "Gaugeテストを実行して"
+
+### 設定の確認
 
 ```bash
-# 1. 環境構築（初回のみ）
-git clone <repository-url>
-cd gauge-ts-mcp
-docker-compose up --build -d
+# npx実行の場合
+npx /path/to/gauge-ts-mcp/build/index.js
 
-# 2. MCP Inspector で動作確認
-docker-compose --profile inspector up -d
-# ブラウザで http://localhost:6274 を開く
+# グローバルインストールの場合
+gauge-mcp-server
 
-# 3. テスト環境で Gauge コマンド実行
-docker-compose --profile test up -d
-docker-compose exec gauge-test-env gauge version
+# ローカルの場合
+npm start
 
-# 4. 停止
-docker-compose down
+# プロセス確認
+npm run ps
+
+# 停止
+npm run stop
+
+# Clineから接続テスト
+# VS CodeのClineチャットで "@gauge-mcp-server" と入力して候補が表示されるか確認
 ```
 
-## 使用例
+## 🗂️ 別リポジトリでの使用例
+
+### 典型的なワークフロー
+
+```bash
+# 1. 別のGaugeプロジェクトに移動
+cd ~/projects/my-web-app
+
+# 2. npxで直接MCP Inspector起動（テスト用）
+npx ~/projects/gauge-ts-mcp/build/index.js
+
+# 3. VS CodeでClineを使用
+# プロジェクトパス: /Users/yourname/projects/my-web-app
+{
+  "name": "get_implemented_steps",
+  "arguments": {
+    "projectPath": "/Users/yourname/projects/my-web-app"
+  }
+}
+
+# 4. Clineでの自然言語での依頼例
+"このプロジェクトの実装済みステップを教えて"
+"basic-webテンプレートで新しいテストファイルを作成して"
+"Gaugeテストを実行して"
+```
+
+### プロジェクト構造例
+
+```
+~/projects/
+├── gauge-ts-mcp/          # MCPサーバー（一度だけ）
+│   ├── src/
+│   └── build/
+├── my-web-app/            # 実際の開発プロジェクト1
+│   ├── specs/
+│   ├── steps/
+│   └── manifest.json
+└── another-gauge-project/ # 実際の開発プロジェクト2
+    ├── specs/
+    ├── steps/
+    └── manifest.json
+```
+
+## 📖 使用例
 
 ### 1. テンプレートからファイル作成
 
@@ -112,7 +253,7 @@ docker-compose down
 {
   "name": "create_from_template",
   "arguments": {
-    "projectPath": "/app/projects/my-project",
+    "projectPath": "/path/to/my-project",
     "templateName": "basic-web",
     "projectName": "MyProject",
     "includeSetup": true
@@ -126,8 +267,7 @@ docker-compose down
 {
   "name": "get_implemented_steps",
   "arguments": {
-    "projectPath": "/app/projects/my-project",
-    "environment": "default"
+    "projectPath": "/path/to/my-project"
   }
 }
 ```
@@ -138,7 +278,7 @@ docker-compose down
 {
   "name": "run_gauge",
   "arguments": {
-    "projectPath": "/app/projects/my-project",
+    "projectPath": "/path/to/my-project",
     "command": "run",
     "specPath": "specs/example.spec",
     "environment": "default"
@@ -146,7 +286,7 @@ docker-compose down
 }
 ```
 
-## テンプレート
+## 📚 テンプレート
 
 サポートされているテンプレート：
 
@@ -154,54 +294,53 @@ docker-compose down
 - **web-ecommerce** - ECサイトテスト用
 - **api-testing** - API テスト用
 
-## トラブルシューティング
+## 🔧 トラブルシューティング
 
 ### ポート競合エラー
+
 ```bash
-# 使用中のポートを確認
-docker-compose down
+# 動作中のプロセス確認
+npm run ps
+
+# ポート使用状況確認
 lsof -i :6274 -i :6277
 
-# 強制停止
-docker-compose down --remove-orphans
+# 全プロセス強制停止
+npm run stop
 ```
 
-### イメージ再ビルド
+### プロセスが停止しない場合
+
 ```bash
-# キャッシュを使わず完全に再ビルド
-docker-compose build --no-cache
+# 手動でプロセス確認
+ps aux | grep gauge-mcp-server
+
+# PIDを指定して強制終了
+kill -9 <PID>
+
+# または特定ポートのプロセス強制終了
+lsof -ti:6274 | xargs kill -9
 ```
 
-## 開発者向け
+## 🔧 開発者向け
 
-### ローカル開発（Docker使わない場合）
+### プロジェクト構造
 
-```bash
-# 依存関係のインストール
-npm install
-
-# TypeScriptビルド
-npm run build
-
-# サーバー起動
-npm start
-
-# MCP Inspector で動作確認
-npm run inspector
+```
+src/
+├── tools/           # ツール別ファイル
+├── templates/       # Gaugeテンプレート
+├── utils/          # ユーティリティ
+└── index.ts        # メインファイル
+test/               # テストファイル
 ```
 
 ### カスタマイズ
 
-- `projects/` フォルダ: Gaugeプロジェクトを配置
-- `examples/` フォルダ: サンプルファイルを配置
-- 環境変数: `docker-compose.yml` で設定
+- `src/templates/`: 新しいテンプレートを追加
+- `src/tools/`: 新しいツールを追加
+- `test/`: テストファイルを追加
 
-## 前提条件
-
-- Docker
-- Docker Compose
-- (オプション) Make
-
-## ライセンス
+## 📝 ライセンス
 
 MIT
