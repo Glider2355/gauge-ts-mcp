@@ -1,13 +1,27 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { promises as fs } from "fs";
+import { join } from "path";
 import { CreateFromTemplateTool } from "../../src/tools/create-from-template.js";
 
 // fsモジュールをモック
 vi.mock("fs", () => ({
   promises: {
     mkdir: vi.fn(),
-    writeFile: vi.fn(),
+    readdir: vi.fn(),
+    stat: vi.fn(),
+    copyFile: vi.fn(),
   },
+}));
+
+// pathモジュールをモック
+vi.mock("path", () => ({
+  join: vi.fn((...args) => args.join("/")),
+  dirname: vi.fn(() => "/mock/src/tools"),
+}));
+
+// URLモジュールをモック
+vi.mock("url", () => ({
+  fileURLToPath: vi.fn(() => "/mock/src/tools/create-from-template.js"),
 }));
 
 describe("CreateFromTemplateTool", () => {
@@ -17,6 +31,18 @@ describe("CreateFromTemplateTool", () => {
   beforeEach(() => {
     tool = new CreateFromTemplateTool();
     vi.clearAllMocks();
+
+    // デフォルトのモック設定
+    mockFs.readdir.mockResolvedValue([
+      "basic-web.ts",
+      "web-ecommerce.ts",
+      "api-testing.ts",
+      "index.ts",
+    ]);
+
+    mockFs.stat.mockResolvedValue({
+      isDirectory: () => false,
+    });
   });
 
   afterEach(() => {
@@ -24,113 +50,108 @@ describe("CreateFromTemplateTool", () => {
   });
 
   describe("execute", () => {
-    it("basic-webテンプレートからファイルを作成する", async () => {
+    it("templatesフォルダを正常にコピーする", async () => {
       const args = {
         projectPath: "/test/project",
-        templateName: "basic-web",
-        projectName: "MyProject",
-        includeSetup: true,
       };
 
       const result = await tool.execute(args);
 
-      // ディレクトリ作成の確認
-      expect(mockFs.mkdir).toHaveBeenCalledWith("/test/project/specs", {
-        recursive: true,
-      });
-      expect(mockFs.mkdir).toHaveBeenCalledWith("/test/project/steps", {
+      // プロジェクトディレクトリの作成確認
+      expect(mockFs.mkdir).toHaveBeenCalledWith("/test/project", {
         recursive: true,
       });
 
-      // ファイル作成の確認
-      expect(mockFs.writeFile).toHaveBeenCalledTimes(3); // spec, steps, setup
+      // templatesディレクトリの作成確認
+      expect(mockFs.mkdir).toHaveBeenCalledWith("/test/project/templates", {
+        recursive: true,
+      });
 
-      // specファイル
-      expect(mockFs.writeFile).toHaveBeenCalledWith(
-        "/test/project/specs/myproject.spec",
-        expect.stringContaining("# MyProject テスト仕様書"),
-        "utf8"
+      // ソースディレクトリの読み取り確認
+      expect(mockFs.readdir).toHaveBeenCalledWith(
+        "/mock/src/tools/../templates"
       );
 
-      // stepsファイル
-      expect(mockFs.writeFile).toHaveBeenCalledWith(
-        "/test/project/steps/MyProjectSteps.ts",
-        expect.stringContaining("MyProjectSteps"),
-        "utf8"
+      // ファイルコピーの確認
+      expect(mockFs.copyFile).toHaveBeenCalledTimes(4);
+      expect(mockFs.copyFile).toHaveBeenCalledWith(
+        "/mock/src/tools/../templates/basic-web.ts",
+        "/test/project/templates/basic-web.ts"
+      );
+      expect(mockFs.copyFile).toHaveBeenCalledWith(
+        "/mock/src/tools/../templates/web-ecommerce.ts",
+        "/test/project/templates/web-ecommerce.ts"
+      );
+      expect(mockFs.copyFile).toHaveBeenCalledWith(
+        "/mock/src/tools/../templates/api-testing.ts",
+        "/test/project/templates/api-testing.ts"
+      );
+      expect(mockFs.copyFile).toHaveBeenCalledWith(
+        "/mock/src/tools/../templates/index.ts",
+        "/test/project/templates/index.ts"
       );
 
-      // setupファイル
-      expect(mockFs.writeFile).toHaveBeenCalledWith(
-        "/test/project/steps/setup.ts",
-        expect.stringContaining("beforeSuite"),
-        "utf8"
-      );
-
-      // 結果の確認
+      // 結果メッセージの確認
       expect(result.content[0].text).toContain(
-        'テンプレート "basic-web" からファイルを作成しました'
+        "テンプレートフォルダを正常にコピーしました"
       );
+      expect(result.content[0].text).toContain(
+        "コピー元: /mock/src/tools/../templates"
+      );
+      expect(result.content[0].text).toContain(
+        "コピー先: /test/project/templates"
+      );
+      expect(result.content[0].text).toContain("basic-web.ts");
+      expect(result.content[0].text).toContain("web-ecommerce.ts");
+      expect(result.content[0].text).toContain("api-testing.ts");
+      expect(result.content[0].text).toContain("index.ts");
     });
 
-    it("includeSetup=falseの場合setupファイルを作成しない", async () => {
+    it("ディレクトリ作成に失敗した場合エラーを投げる", async () => {
+      mockFs.mkdir.mockRejectedValue(new Error("Permission denied"));
+
       const args = {
         projectPath: "/test/project",
-        templateName: "basic-web",
-        projectName: "MyProject",
-        includeSetup: false,
-      };
-
-      await tool.execute(args);
-
-      expect(mockFs.writeFile).toHaveBeenCalledTimes(2); // spec, stepsのみ
-      expect(mockFs.writeFile).not.toHaveBeenCalledWith(
-        expect.stringContaining("setup.ts"),
-        expect.anything(),
-        expect.anything()
-      );
-    });
-
-    it("存在しないテンプレート名の場合エラーを投げる", async () => {
-      const args = {
-        projectPath: "/test/project",
-        templateName: "non-existent",
-        projectName: "MyProject",
       };
 
       await expect(tool.execute(args)).rejects.toThrow(
-        "不明なテンプレート: non-existent"
+        "テンプレートフォルダのコピーエラー"
       );
     });
 
-    it("ファイル作成に失敗した場合エラーを投げる", async () => {
-      mockFs.writeFile.mockRejectedValue(new Error("Permission denied"));
+    it("ファイル読み取りに失敗した場合エラーを投げる", async () => {
+      mockFs.readdir.mockRejectedValue(new Error("Directory not found"));
 
       const args = {
         projectPath: "/test/project",
-        templateName: "basic-web",
-        projectName: "MyProject",
       };
 
-      await expect(tool.execute(args)).rejects.toThrow("ファイル作成エラー");
+      await expect(tool.execute(args)).rejects.toThrow(
+        "テンプレートフォルダのコピーエラー"
+      );
     });
 
-    it("web-ecommerceテンプレートを正しく処理する", async () => {
+    it("ファイルコピーに失敗した場合エラーを投げる", async () => {
+      mockFs.copyFile.mockRejectedValue(new Error("Copy failed"));
+
       const args = {
         projectPath: "/test/project",
-        templateName: "web-ecommerce",
-        projectName: "ECommerceProject",
+      };
+
+      await expect(tool.execute(args)).rejects.toThrow(
+        "テンプレートフォルダのコピーエラー"
+      );
+    });
+
+    it("空のプロジェクトパスでもエラーを投げない", async () => {
+      const args = {
+        projectPath: "",
       };
 
       const result = await tool.execute(args);
 
-      expect(mockFs.writeFile).toHaveBeenCalledWith(
-        "/test/project/specs/ecommerceproject.spec",
-        expect.stringContaining("ECサイトテスト"),
-        "utf8"
-      );
-
       expect(result.content[0].text).toContain(
-        'テンプレート "web-ecommerce" からファイルを作成しました'
+        "テンプレートフォルダを正常にコピーしました"
       );
     });
   });
