@@ -72,4 +72,7 @@ Clineの設定ファイルを直接編集：
 2. Cline拡張を開く
 3. 新しいチャットを開始
 
+## 実装済みtools
+- `get_implemented_steps`: 実装済みのステップを取得
+
 
