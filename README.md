@@ -21,8 +21,9 @@ npm run setup
 ```
 
 ### ステップ2: Cline MCP設定
-MCP Servers > Installed > Configure MCP Servers で下記を設定する
+MCP Servers > Installed > Configure MCP Servers で下記を参考に設定する
 
+例:
 ```json
 {
   "mcpServers": {
