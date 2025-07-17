@@ -8,7 +8,6 @@
 
 - Node.js 18以上
 - VS Code + Cline拡張
-- Gauge CLI（オプション、Gaugeコマンド実行時のみ必要）
 
 ### ステップ1: プロジェクトのクローンとビルド
 
@@ -22,39 +21,8 @@ npm run setup
 ```
 
 ### ステップ2: Cline MCP設定
+MCP Servers > Installed > Configure MCP Servers で下記を設定する
 
-#### 方法A: VS Code設定UI使用（推奨）
-
-1. VS CodeでCline拡張を開く
-2. 設定アイコン（⚙️）をクリック
-3. "MCP Servers"セクションで"Add Server"
-4. 以下を入力：
-   - **Server Name**: `gauge-mcp`
-   - **Command**: `npx`
-   - **Arguments**: `["<FULL_PATH>/gauge-ts-mcp/build/index.js"]`
-
-**例:**
-```
-Server Name: gauge-mcp
-Command: npx
-Arguments: ["/Users/your-username/Dev/gauge-ts-mcp/build/index.js"]
-```
-
-#### 方法B: 設定ファイル手動編集
-
-Clineの設定ファイルを直接編集：
-
-**macOS/Linux:**
-```bash
-~/.config/cline/settings.json
-```
-
-**Windows:**
-```bash
-%APPDATA%\Cline\settings.json
-```
-
-設定内容：
 ```json
 {
   "mcpServers": {
