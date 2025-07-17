@@ -58,7 +58,7 @@ Clineの設定ファイルを直接編集：
 ```json
 {
   "mcpServers": {
-    "gauge-mcp": {
+    "gauge-ts-mcp": {
       "command": "npx",
       "args": ["/Users/your-username/Dev/gauge-ts-mcp/build/index.js"]
     }
