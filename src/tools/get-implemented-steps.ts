@@ -40,9 +40,7 @@ export class GetImplementedStepsTool {
         content: [
           {
             type: "text" as const,
-            text: `実装済みステップ (${allSteps.length}個):\n\n${allSteps
-              .map((step) => `• ${step.stepText} (${step.file})`)
-              .join("\n")}`,
+            text: `${allSteps.map((step) => `* ${step.stepText}`).join("\n")}`,
           },
         ],
       };
