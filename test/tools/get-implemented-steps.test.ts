@@ -36,7 +36,7 @@ describe("GetImplementedStepsTool", () => {
       const fileContentMap: Record<string, string> = {
         'step1.ts': `@Step("ログインする")
 public async login() {}`,
-        'step2.js': `@Step("検索する")
+        'step2.js': `@Step('検索する')
 public async search() {}`,
         'setup.ts': `// setupファイル、ステップなし`
       };

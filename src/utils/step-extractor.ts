@@ -5,14 +5,14 @@ export interface StepInfo {
 
 export class StepExtractor {
   extractStepsFromFile(content: string, filePath: string): StepInfo[] {
-    const stepRegex = /@Step\("([^"]+)"\)/g;
+    const stepRegex = /@Step\((['"])([^'"]+)\1\)/g;
     const steps: StepInfo[] = [];
     let match;
 
     while ((match = stepRegex.exec(content)) !== null) {
-      if (match[1]) {
+      if (match[2]) {
         steps.push({
-          stepText: match[1],
+          stepText: match[2],
           file: filePath,
         });
       }

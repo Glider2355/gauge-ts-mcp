@@ -59,14 +59,26 @@ export class NonStepClass {
       expect(steps).toHaveLength(0);
     });
 
-    it("複数行にわたるステップ定義も正しく抽出する", () => {
+    it("シングルクオートのステップも抽出する", () => {
       const content = `
-@Step("複数行の" +
-      "ステップ定義")
-public async multiLineStep() {}
+import { Step } from "gauge-ts";
 
-@Step("通常のステップ")
-public async normalStep() {}
+export default class TestSteps {
+  @Step('シングルクオートのステップ')
+  public async singleQuoteStep() {
+    // 実装
+  }
+
+  @Step("ダブルクオートのステップ")
+  public async doubleQuoteStep() {
+    // 実装
+  }
+
+  @Step('パラメータ付き <param> ステップ')
+  public async paramStep(param: string) {
+    // 実装
+  }
+}
       `;
 
       const steps = stepExtractor.extractStepsFromFile(
@@ -74,9 +86,10 @@ public async normalStep() {}
         "/test/file.ts"
       );
 
-      // 複数行のステップ定義は現在の実装では最初の行のみ抽出される
-      expect(steps).toHaveLength(1);
-      expect(steps[0].stepText).toBe("通常のステップ");
+      expect(steps).toHaveLength(3);
+      expect(steps[0]?.stepText).toBe("シングルクオートのステップ");
+      expect(steps[1]?.stepText).toBe("ダブルクオートのステップ");
+      expect(steps[2]?.stepText).toBe("パラメータ付き <param> ステップ");
     });
   });
 
