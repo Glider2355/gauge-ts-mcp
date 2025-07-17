@@ -56,7 +56,7 @@ public async search() {}`,
       const result = await tool.execute(args);
 
       // ファイル読み取りの確認
-      expect(mockFs.readdir).toHaveBeenCalledWith(`/test/project/steps`);
+      expect(mockFs.readdir).toHaveBeenCalledWith(`/test/project`);
       expect(mockFs.readFile).toHaveBeenCalledTimes(3); // .ts と .js ファイルのみ
 
       // 結果の確認
