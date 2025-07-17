@@ -7,6 +7,7 @@ vi.mock("fs", () => ({
   promises: {
     readdir: vi.fn(),
     readFile: vi.fn(),
+    access: vi.fn(),
   },
 }));
 
@@ -36,12 +37,21 @@ describe("GetImplementedStepsTool", () => {
       const fileContentMap: Record<string, string> = {
         'step1.ts': `@Step("ログインする")
 public async login() {}`,
-        'step2.js': `@Step('検索する')
+        'step2.js': `@Step("検索する")
 public async search() {}`,
         'setup.ts': `// setupファイル、ステップなし`
       };
 
-      mockFs.readdir.mockResolvedValue(mockFiles);
+      // fs.accessのモック（ディレクトリ存在確認）
+      mockFs.access.mockResolvedValue(undefined);
+
+      // fs.readdirのモック（withFileTypesオプション付き）
+      mockFs.readdir.mockResolvedValue([
+        { name: 'step1.ts', isDirectory: () => false, isFile: () => true },
+        { name: 'step2.js', isDirectory: () => false, isFile: () => true },
+        { name: 'setup.ts', isDirectory: () => false, isFile: () => true },
+        { name: 'readme.md', isDirectory: () => false, isFile: () => true },
+      ]);
 
       mockFs.readFile.mockImplementation((filePath: string) => {
         const fileName = Object.keys(fileContentMap).find(name => filePath.includes(name));
@@ -56,14 +66,20 @@ public async search() {}`,
       const result = await tool.execute(args);
 
       // ファイル読み取りの確認
-      expect(mockFs.readdir).toHaveBeenCalledWith(`/test/project`);
+      expect(mockFs.access).toHaveBeenCalledWith(`/test/project`);
+      expect(mockFs.readdir).toHaveBeenCalledWith(`/test/project`, { withFileTypes: true });
       expect(mockFs.readFile).toHaveBeenCalledTimes(3); // .ts と .js ファイルのみ
 
       // 結果の確認
-      expect(result.content[0]?.text).toEqual('* ログインする\n* 検索する');
+      expect(result.content[0]?.text).toEqual(`* ログインする
+* 検索する`);
     });
 
     it(`ステップファイルが存在しない場合`, async () => {
+      // fs.accessのモック（ディレクトリ存在確認）
+      mockFs.access.mockResolvedValue(undefined);
+
+      // 空のディレクトリをモック
       mockFs.readdir.mockResolvedValue([]);
 
       const args = {
@@ -72,17 +88,10 @@ public async search() {}`,
 
       const result = await tool.execute(args);
 
-      expect(result.content[0]?.text).toEqual(``);
+      expect(result.content[0]?.text).toEqual(`実装済みステップが見つかりませんでした`);
     });
 
     it(`TypeScript以外のファイルは無視する`, async () => {
-      const mockFiles = [
-        `step1.ts`,
-        `config.json`,
-        `readme.md`,
-        `step2.js`,
-      ];
-
       const fileContentMap: Record<string, string> = {
         'step1.ts': `@Step("ステップ1")
 public async step1() {}`,
@@ -90,7 +99,16 @@ public async step1() {}`,
 public async step2() {}`
       };
 
-      mockFs.readdir.mockResolvedValue(mockFiles);
+      // fs.accessのモック（ディレクトリ存在確認）
+      mockFs.access.mockResolvedValue(undefined);
+
+      // fs.readdirのモック
+      mockFs.readdir.mockResolvedValue([
+        { name: 'step1.ts', isDirectory: () => false, isFile: () => true },
+        { name: 'config.json', isDirectory: () => false, isFile: () => true },
+        { name: 'readme.md', isDirectory: () => false, isFile: () => true },
+        { name: 'step2.js', isDirectory: () => false, isFile: () => true },
+      ]);
 
       mockFs.readFile.mockImplementation((filePath: string) => {
         const fileName = Object.keys(fileContentMap).find(name => filePath.includes(name));
@@ -108,7 +126,13 @@ public async step2() {}`
     });
 
     it(`複数のステップが含まれるファイルを正しく処理する`, async () => {
-      mockFs.readdir.mockResolvedValue([`multi-step.ts`]);
+      // fs.accessのモック（ディレクトリ存在確認）
+      mockFs.access.mockResolvedValue(undefined);
+
+      // fs.readdirのモック
+      mockFs.readdir.mockResolvedValue([
+        { name: 'multi-step.ts', isDirectory: () => false, isFile: () => true },
+      ]);
 
       const fileContent = `
 @Step("ステップ1")
@@ -136,16 +160,24 @@ public async paramStep(param: string) {}`;
     });
 
     it(`ファイル読み取りエラーの場合`, async () => {
-      mockFs.readdir.mockRejectedValue(new Error(`Directory not found`));
+      // fs.accessのモック（ディレクトリが存在しない）
+      mockFs.access.mockRejectedValue(new Error(`Directory not found`));
 
       const args = {
         projectPath: `/test/project`,
       };
 
-      await expect(tool.execute(args)).rejects.toThrow(`ステップ取得エラー`);
+      const result = await tool.execute(args);
+
+      // ディレクトリが存在しない場合は適切なメッセージを返す
+      expect(result.content[0]?.text).toEqual(`プロジェクトディレクトリが見つかりません: /test/project`);
     });
 
     it(`環境パラメータを受け取る（現在は使用されていないが）`, async () => {
+      // fs.accessのモック（ディレクトリ存在確認）
+      mockFs.access.mockResolvedValue(undefined);
+
+      // 空のディレクトリをモック
       mockFs.readdir.mockResolvedValue([]);
 
       const args = {
@@ -155,7 +187,7 @@ public async paramStep(param: string) {}`;
 
       const result = await tool.execute(args);
 
-      expect(result.content[0]?.text).toEqual(``);
+      expect(result.content[0]?.text).toEqual(`実装済みステップが見つかりませんでした`);
     });
   });
 });
