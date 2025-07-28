@@ -1,3 +1,7 @@
+src/templates/*
+!/src/templates/api/.gitkeep
+!/src/templates/web/.gitkeep
+
 # Dependencies
 node_modules/
 npm-debug.log*
