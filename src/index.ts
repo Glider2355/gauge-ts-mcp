@@ -8,19 +8,18 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 
 import {
-  CreateFromTemplateTool,
-  CreateFromTemplateArgs,
-} from "./tools/create-from-template.js";
-import {
   GetImplementedStepsTool,
   GetImplementedStepsArgs,
 } from "./tools/get-implemented-steps.js";
-import { getAvailableTemplates } from "./templates/index.js";
+import {
+  CreateApiTemplateTool,
+  CreateApiTemplateArgs,
+} from "./tools/create-api-template.js";
 
 class GaugeMCPServer {
   private server: Server;
-  private createFromTemplateTool: CreateFromTemplateTool;
   private getImplementedStepsTool: GetImplementedStepsTool;
+  private createApiTemplateTool: CreateApiTemplateTool;
 
   constructor() {
     this.server = new Server(
@@ -36,8 +35,8 @@ class GaugeMCPServer {
     );
 
     // ツールのインスタンス化
-    this.createFromTemplateTool = new CreateFromTemplateTool();
     this.getImplementedStepsTool = new GetImplementedStepsTool();
+    this.createApiTemplateTool = new CreateApiTemplateTool();
 
     this.setupToolHandlers();
   }
@@ -47,36 +46,24 @@ class GaugeMCPServer {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       return {
         tools: [
-          // TODO: テストできたら実装する
-          // {
-          //   name: "create_from_template",
-          //   description: "テンプレートからGaugeプロジェクトファイルを作成",
-          //   inputSchema: {
-          //     type: "object",
-          //     properties: {
-          //       projectPath: {
-          //         type: "string",
-          //         description: "プロジェクトパス",
-          //       },
-          //       templateName: {
-          //         type: "string",
-          //         description: "テンプレート名",
-          //         enum: getAvailableTemplates(),
-          //         default: "basic-web",
-          //       },
-          //       projectName: {
-          //         type: "string",
-          //         description: "プロジェクト名",
-          //       },
-          //       includeSetup: {
-          //         type: "boolean",
-          //         description: "setup.tsを含める",
-          //         default: true,
-          //       },
-          //     },
-          //     required: ["projectPath", "projectName"],
-          //   },
-          // },
+          {
+            name: "create_api_template",
+            description: "GaugeのAPIテスト用のテンプレートフォルダを作成します。outputPath/testNameにテンプレートを作成します。outputPathは指示がなければAPIのパスと一致させることを推奨します。",
+            inputSchema: {
+              type: "object",
+              properties: {
+                outputPath: {
+                  type: "string",
+                  description: "出力先のパス",
+                },
+                testName: {
+                  type: "string",
+                  description: "テスト観点(日本語)",
+                },
+              },
+              required: ["outputPath", "testName"],
+            },
+          },
           {
             name: "get_implemented_steps",
             description: "実装済みステップを取得",
@@ -106,9 +93,9 @@ class GaugeMCPServer {
 
       try {
         switch (name) {
-          case "create_from_template":
-            return await this.createFromTemplateTool.execute(
-              args as unknown as CreateFromTemplateArgs
+          case "create_api_template":
+            return await this.createApiTemplateTool.execute(
+              args as unknown as CreateApiTemplateArgs
             );
           case "get_implemented_steps":
             return await this.getImplementedStepsTool.execute(

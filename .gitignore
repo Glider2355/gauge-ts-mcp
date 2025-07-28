@@ -1,5 +1,6 @@
-src/templates/*
+/src/templates/api/*
 !/src/templates/api/.gitkeep
+/src/templates/web/*
 !/src/templates/web/.gitkeep
 
 # Dependencies
