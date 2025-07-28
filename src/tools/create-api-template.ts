@@ -12,10 +12,11 @@ export class CreateApiTemplateTool {
     const { outputPath, testName } = args;
 
     try {
-      // 現在のモジュールのディレクトリを取得
+      // gauge-ts-mcpプロジェクトのソースディレクトリからテンプレートを取得
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = dirname(__filename);
-      const apiTemplateDir = join(__dirname, "../templates/api");
+      const projectRoot = join(__dirname, "../..");
+      const apiTemplateDir = join(projectRoot, "src/templates/api");
       const destDir = join(outputPath, testName);
 
       // プロジェクトディレクトリが存在することを確認
@@ -53,6 +54,11 @@ export class CreateApiTemplateTool {
       const items = await fs.readdir(source);
 
       for (const item of items) {
+        // .gitkeepファイルは除外
+        if (item === '.gitkeep') {
+          continue;
+        }
+
         const sourcePath = join(source, item);
         const destPath = join(destination, item);
         const stat = await fs.stat(sourcePath);

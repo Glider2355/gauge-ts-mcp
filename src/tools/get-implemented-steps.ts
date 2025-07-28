@@ -3,7 +3,7 @@ import { join } from "path";
 import { StepExtractor, StepInfo } from "../utils/step-extractor.js";
 
 export interface GetImplementedStepsArgs {
-  projectPath: string;
+  stepPath: string;
   environment?: string;
 }
 
@@ -15,7 +15,7 @@ export class GetImplementedStepsTool {
   }
 
   async execute(args: GetImplementedStepsArgs) {
-    const { projectPath } = args;
+    const { stepPath: projectPath } = args;
 
     try {
       // プロジェクトディレクトリの存在確認

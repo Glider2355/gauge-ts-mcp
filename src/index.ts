@@ -48,7 +48,7 @@ class GaugeMCPServer {
         tools: [
           {
             name: "create_api_template",
-            description: "GaugeのAPIテスト用のテンプレートフォルダを作成します。outputPath/testNameにテンプレートを作成します。outputPathは指示がなければAPIのパスと一致させることを推奨します。",
+            description: "GaugeのAPIテスト用のテンプレートフォルダを作成します。outputPath/testNameにテンプレートを作成します。",
             inputSchema: {
               type: "object",
               properties: {
@@ -70,9 +70,9 @@ class GaugeMCPServer {
             inputSchema: {
               type: "object",
               properties: {
-                projectPath: {
+                stepPath: {
                   type: "string",
-                  description: "プロジェクトパス",
+                  description: "実装済みのステップフォルダのパス",
                 },
                 environment: {
                   type: "string",
@@ -80,7 +80,7 @@ class GaugeMCPServer {
                   default: "default",
                 },
               },
-              required: ["projectPath"],
+              required: ["stepFullPath"],
             },
           },
         ],
